@@ -66,6 +66,9 @@ public: // 静的メンバ関数
 	/// </summary>
 	static void PostDraw();
 
+	//座標の取得
+	const XMFLOAT2& GetPosition() { return position; }
+
 	/// <summary>
 	/// スプライト生成
 	/// </summary>
