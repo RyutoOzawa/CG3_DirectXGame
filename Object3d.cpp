@@ -39,6 +39,7 @@ D3D12_INDEX_BUFFER_VIEW Object3d::ibView{};
 //unsigned short Object3d::indices[planeCount * 3];
 vector<Object3d::VertexPosNormalUv>Object3d::vertices;
 vector<unsigned short> Object3d::indices;
+Object3d::Material Object3d::material;
 
 void Object3d::StaticInitialize(ID3D12Device * device, int window_width, int window_height)
 {
