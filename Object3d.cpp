@@ -186,7 +186,7 @@ void Object3d::InitializeGraphicsPipeline()
 
 	// 頂点シェーダの読み込みとコンパイル
 	result = D3DCompileFromFile(
-		L"Resources/Shaders/BasicVertexShader.hlsl",	// シェーダファイル名
+		L"Resources/Shaders/OBJVertexShader.hlsl",	// シェーダファイル名
 		nullptr,
 		D3D_COMPILE_STANDARD_FILE_INCLUDE, // インクルード可能にする
 		"main", "vs_5_0",	// エントリーポイント名、シェーダーモデル指定
@@ -209,7 +209,7 @@ void Object3d::InitializeGraphicsPipeline()
 
 	// ピクセルシェーダの読み込みとコンパイル
 	result = D3DCompileFromFile(
-		L"Resources/Shaders/BasicPixelShader.hlsl",	// シェーダファイル名
+		L"Resources/Shaders/OBJPixelShader.hlsl",	// シェーダファイル名
 		nullptr,
 		D3D_COMPILE_STANDARD_FILE_INCLUDE, // インクルード可能にする
 		"main", "ps_5_0",	// エントリーポイント名、シェーダーモデル指定
@@ -296,10 +296,16 @@ void Object3d::InitializeGraphicsPipeline()
 	CD3DX12_DESCRIPTOR_RANGE descRangeSRV;
 	descRangeSRV.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0); // t0 レジスタ
 
-	// ルートパラメータ
-	CD3DX12_ROOT_PARAMETER rootparams[2];
+	//// ルートパラメータ
+	//CD3DX12_ROOT_PARAMETER rootparams[2];
+	//rootparams[0].InitAsConstantBufferView(0, 0, D3D12_SHADER_VISIBILITY_ALL);
+	//rootparams[1].InitAsDescriptorTable(1, &descRangeSRV, D3D12_SHADER_VISIBILITY_ALL);
+
+		// ルートパラメータ
+	CD3DX12_ROOT_PARAMETER rootparams[3];
 	rootparams[0].InitAsConstantBufferView(0, 0, D3D12_SHADER_VISIBILITY_ALL);
-	rootparams[1].InitAsDescriptorTable(1, &descRangeSRV, D3D12_SHADER_VISIBILITY_ALL);
+	rootparams[1].InitAsConstantBufferView(1, 0, D3D12_SHADER_VISIBILITY_ALL);
+rootparams[2].InitAsDescriptorTable(1, &descRangeSRV, D3D12_SHADER_VISIBILITY_ALL);
 
 	// スタティックサンプラー
 	CD3DX12_STATIC_SAMPLER_DESC samplerDesc = CD3DX12_STATIC_SAMPLER_DESC(0);
@@ -402,7 +408,11 @@ void Object3d::CreateModel()
 	//ファイルストリーム
 	ifstream file;
 	//.objファイルを開く
-	file.open("Resources/triangle_tex/triangle_tex.obj");
+	//file.open("Resources/triangle_tex/triangle_tex.obj");
+	const string modelname = "triangle_mat";						
+	const string filename =  modelname + ".obj";					//"triangle_mat.obj"
+	const string directoryPath = "Resources/" + modelname + "/";	//"Resources/triangle_mat/"
+	file.open(directoryPath + filename);	//"Resources/triangle_mat/triangle_mat.obj"
 	//ファイルオープン失敗をチェック
 	if (file.fail()) {
 		assert(0);
@@ -480,6 +490,14 @@ void Object3d::CreateModel()
 			line_stream >> normal.z;
 			//法線ベクトルデータに追加
 			normals.emplace_back(normal);
+		}
+		//先頭文字列がmtllibならマテリアル
+		if (key == "mtllib") {
+			//マテリアルのファイル名読み込み
+			string filename;
+			line_stream >> filename;
+			//マテリアル読み込み
+			LoadMaterial(directoryPath, filename);
 		}
 	}
 	//ファイルを閉じる
@@ -666,6 +684,40 @@ void Object3d::UpdateViewMatrix()
 	matView = XMMatrixLookAtLH(XMLoadFloat3(&eye), XMLoadFloat3(&target), XMLoadFloat3(&up));
 }
 
+void Object3d::LoadMaterial(const std::string& directoryPath, const std::string& filename)
+{
+
+	//ファイルストリーム
+	ifstream file;
+	//マテリアルファイルを開く
+	file.open(directoryPath + filename);
+	//ファイルオープン失敗をチェック
+	if (file.fail()) {
+		assert(0);
+	}
+
+	//1行ずつ読み込む
+	string line;
+	while (getline(file, line)) {
+
+		//1行分の文字列をストリームに変換
+		istringstream line_stream(line);
+
+		//半角スペース区切りで行の先頭文字列を取得
+		string key;
+		getline(line_stream, key, ' ');
+
+		//先頭のタブ文字は無視する
+		if (key[0] == '\t') {
+			key.erase(key.begin());
+		}
+		
+	}
+	//ファイルを閉じる
+	file.close();
+
+}
+
 bool Object3d::Initialize()
 {
 	// nullptrチェック
@@ -675,7 +727,7 @@ bool Object3d::Initialize()
 	CD3DX12_HEAP_PROPERTIES heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 	// リソース設定
 	CD3DX12_RESOURCE_DESC resourceDesc =
-		CD3DX12_RESOURCE_DESC::Buffer((sizeof(ConstBufferData) + 0xff) & ~0xff);
+		CD3DX12_RESOURCE_DESC::Buffer((sizeof(ConstBufferDatab0) + 0xff) & ~0xff);
 
 	HRESULT result;
 
@@ -683,8 +735,18 @@ bool Object3d::Initialize()
 	result = device->CreateCommittedResource(
 		&heapProps, // アップロード可能
 		D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
-		IID_PPV_ARGS(&constBuff));
+		IID_PPV_ARGS(&constBuffb0));
 	assert(SUCCEEDED(result));
+
+	resourceDesc =
+		CD3DX12_RESOURCE_DESC::Buffer((sizeof(ConstBufferDatab1) + 0xff) & ~0xff);
+	result = device->CreateCommittedResource(
+		&heapProps,
+		D3D12_HEAP_FLAG_NONE,
+		&resourceDesc,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(&constBuffb1));
 
 	return true;
 }
@@ -715,11 +777,20 @@ void Object3d::Update()
 	}
 
 	// 定数バッファへデータ転送
-	ConstBufferData* constMap = nullptr;
-	result = constBuff->Map(0, nullptr, (void**)&constMap);
-	constMap->color = color;
+	ConstBufferDatab0* constMap = nullptr;
+	result = constBuffb0->Map(0, nullptr, (void**)&constMap);
+	//constMap->color = color;
 	constMap->mat = matWorld * matView * matProjection;	// 行列の合成
-	constBuff->Unmap(0, nullptr);
+	constBuffb0->Unmap(0, nullptr);
+
+	//定数バッファへデータ転送
+	ConstBufferDatab1* constMapb1 = nullptr;
+	result = constBuffb1->Map(0, nullptr, (void**)&constMapb1);
+	constMapb1->ambient = material.ambient;
+	constMapb1->diffuse = material.diffuse;
+	constMapb1->specular = material.specular;
+	constMapb1->alpha = material.alpha;
+	constBuffb1->Unmap(0, nullptr);
 }
 
 void Object3d::Draw()
@@ -737,10 +808,16 @@ void Object3d::Draw()
 	ID3D12DescriptorHeap* ppHeaps[] = { descHeap.Get() };
 	cmdList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 
-	// 定数バッファビューをセット
-	cmdList->SetGraphicsRootConstantBufferView(0, constBuff->GetGPUVirtualAddress());
+	//// 定数バッファビューをセット
+	//cmdList->SetGraphicsRootConstantBufferView(0, constBuffb0->GetGPUVirtualAddress());
+	//// シェーダリソースビューをセット
+	//cmdList->SetGraphicsRootDescriptorTable(1, gpuDescHandleSRV);
+	
+		// 定数バッファビューをセット
+	cmdList->SetGraphicsRootConstantBufferView(0, constBuffb0->GetGPUVirtualAddress());
+	cmdList->SetGraphicsRootConstantBufferView(1, constBuffb1->GetGPUVirtualAddress());
 	// シェーダリソースビューをセット
-	cmdList->SetGraphicsRootDescriptorTable(1, gpuDescHandleSRV);
+	cmdList->SetGraphicsRootDescriptorTable(2, gpuDescHandleSRV);
 	// 描画コマンド
 	cmdList->DrawIndexedInstanced((UINT)indices.size(), 1, 0, 0, 0);
 }
