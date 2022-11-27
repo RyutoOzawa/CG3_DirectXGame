@@ -44,7 +44,8 @@ private: // 定数
 	//static const int vertexCount = planeCount * 3;		// 頂点数
 	static const int vertexCount = 4;		// 頂点数
 	static const int indexCount = 3*2;		// 頂点数
-
+	static XMMATRIX matBillboard;	//ビルボード行列
+	static XMMATRIX matBillboardY;	//Y軸周りビルボード行列
 
 public: // 静的メンバ関数
 	/// <summary>
