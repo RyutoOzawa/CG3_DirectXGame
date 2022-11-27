@@ -11,6 +11,7 @@ GameScene::~GameScene()
 {
 	delete spriteBG;
 	delete object3d;
+	delete object3dBillboard;
 	delete sprite1;
 	delete sprite2;
 }
@@ -41,6 +42,8 @@ void GameScene::Initialize(DirectXCommon* dxCommon, Input* input)
 	// 3Dオブジェクト生成
 	object3d = Object3d::Create();
 	object3d->Update();
+	object3dBillboard = Object3d::Create();
+	object3dBillboard->Update();
 }
 
 void GameScene::Update()
@@ -81,6 +84,8 @@ void GameScene::Update()
 	}
 
 	object3d->Update();
+	object3dBillboard->isBillboard = true;
+	object3dBillboard->Update();
 }
 
 void GameScene::Draw()
@@ -110,6 +115,7 @@ void GameScene::Draw()
 
 	// 3Dオブクジェクトの描画
 	object3d->Draw();
+	object3dBillboard->Draw();
 
 	/// <summary>
 	/// ここに3Dオブジェクトの描画処理を追加できる

@@ -338,7 +338,7 @@ void Object3d::LoadTexture()
 	ScratchImage scratchImg{};
 
 	// WICテクスチャのロード
-	result = LoadFromWICFile(L"Resources/tex1.png", WIC_FLAGS_NONE, &metadata, scratchImg);
+	result = LoadFromWICFile(L"Resources/face.png", WIC_FLAGS_NONE, &metadata, scratchImg);
 	assert(SUCCEEDED(result));
 
 	ScratchImage mipChain{};
@@ -723,7 +723,10 @@ void Object3d::Update()
 	matWorld *= matRot; // ワールド行列に回転を反映
 
 		//ビルボード行列をかける
-	matWorld *= matBillboardY;
+	if (isBillboard) {
+		//matWorld *= matBillboardY;
+		matWorld *= matBillboard;
+	}
 
 	matWorld *= matTrans; // ワールド行列に平行移動を反映
 
